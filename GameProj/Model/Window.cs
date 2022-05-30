@@ -4,7 +4,7 @@ using System.Text;
 
 namespace GameProj.Model
 {
-    class Window
+     class Window
     {
         public static int Height { get; private set; }
         public static int Width { get; private set; }

@@ -12,98 +12,229 @@ namespace GameProj
 {
     public partial class GameForm : Form
     {
-        Timer Timer;
-        Player Player;
-        Window Window;
-        Ground Ground;
-        Platform Platform;
-        Enemy Enemy1;
-        Healthbar Healthbar;
-        
-        public void Initialize()
+        public Timer Timer { get; private set; }
+        public Timer AnimationDelayTimer { get; private set; }
+        public Player Player { get; private set; }
+        public static Level Level { get; private set; }
+        public bool LevelInitialized { get; private set; }
+        public int CurrentLevelNum { get; private set; }
+        private Window Window;
+        private GameStages GameStage;
+        private enum GameStages
         {
-            KeyPreview = true;
-            Window = new Window(1200, 600);
-            Player = new Player(100, 500);
-            Enemy1 = new Enemy(200, 200);
-            Ground = new Ground(0, 600);
-            Platform = new Platform(350, 400);
-            Healthbar = new Healthbar(10, 10, 20);
-            SetTimer(10);
-            SetWindowSettings();
+            NotStarted,
+            Started,
+            Ended
         }
-
         public GameForm()
         {
             Initialize();
-            KeyDown += new KeyEventHandler(OnKeyDown);
-            KeyUp += new KeyEventHandler(OnKeyUp);
-            Timer.Tick += new EventHandler(Update);
+        }
+        private void Initialize()
+        {
+            Window = new Window(1920, 1080);
+            SetWindowSettings();
+            SetEvents();
+
+            GameStage = GameStages.NotStarted;
+            LevelInitialized = false;
+            KeyPreview = true;
         }
 
-        public void OnKeyDown(object args, KeyEventArgs e)
+        
+        
+        private void SwitchStage(object args, EventArgs e)
         {
-            switch (e.KeyCode)
+            if (GameStage == GameStages.NotStarted)
+                GameStage = GameStages.Started;
+            else if (GameStage == GameStages.Started)
+                GameStage = GameStages.Ended;
+        }
+        private void ChangeLevel()
+        {
+            CurrentLevelNum++;
+            LevelInitialized = false;
+        }
+        private void Stop(object args, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+
+
+        private void DrawMenu()
+        {
+            BackgroundImage = new Bitmap(@"C:\Users\Kirill\Desktop\Game\Images\main.gif");
+            var buttonLength = 200;
+            var buttonHeight = 50;
+
+            Button StartButton = new Button()
             {
-                case Keys.D:
-                    {
-                       Player.XSpeed = 7;
-                       break;
-                    }
-                case Keys.A:
-                    {
-                        Player.XSpeed = -7;
-                        break;
-                    }
-                case Keys.Space:
-                    {
-                        Player.Jump(20);
-                        break;
-                    }
+                Location = new Point(300, 300),
+                Text = "Start Game",
+                Size = new Size(buttonLength, buttonHeight),
+                BackgroundImage = new Bitmap(@"C:\Users\Kirill\Desktop\Game\Images\platform.jpg"),
+                FlatStyle = FlatStyle.Flat,
+                ForeColor = Color.White,
+                Font = new Font("Georgia", 15, FontStyle.Bold, GraphicsUnit.Point)
+            };
+            Button QuitButton = new Button()
+            {
+                Location = new Point(300, StartButton.Bottom + 20),
+                Text = "Quit Game",
+                Size = new Size(buttonLength, buttonHeight),
+                BackgroundImage = new Bitmap(@"C:\Users\Kirill\Desktop\Game\Images\platform.jpg"),
+                FlatStyle = FlatStyle.Flat,
+                ForeColor = Color.White,
+                Font = new Font("Georgia", 15, FontStyle.Bold, GraphicsUnit.Point)
+            };
+
+            StartButton.Click += new EventHandler(SwitchStage);
+            QuitButton.Click += new EventHandler(Stop);
+            Controls.Add(StartButton);
+            Controls.Add(QuitButton);
+        }
+        private void DrawLevel(int currentLevelNum)
+        {
+            Level = new Level(currentLevelNum);
+            Player = Level.Player;
+            DrawLevelBackground(Level);
+            LevelInitialized = true;
+        }
+        private void DrawLevelBackground(Level level)
+        {
+            BackgroundImage = level.BackgroundImage;
+            BackgroundImageLayout = ImageLayout.Center;
+        }
+
+      
+
+        private void OnKeyUp(object args, KeyEventArgs e)
+        {
+            if (GameStage == GameStages.Started)
+            {
+                if (e.KeyCode == Keys.D || e.KeyCode == Keys.A)
+                {
+                    Player.Stay();
+                }
+            }  
+        }
+        private void OnKeyDown(object args, KeyEventArgs e)
+        {
+            if (GameStage == GameStages.Started)
+            {
+                switch (e.KeyCode)
+                {
+                    case Keys.D:
+                        {
+                            Player.Run(1);
+                            break;
+                        }
+                    case Keys.A:
+                        {
+                            Player.Run(-1);
+                            break;
+                        }
+                    case Keys.Space:
+                        {
+                            Player.Jump(30);
+                            break;
+                        }
+                }
             }
         }
-
-        public void OnKeyUp(object args, KeyEventArgs e)
+        private void OnClick(object args, EventArgs e)
         {
-            if (e.KeyCode == Keys.D || e.KeyCode == Keys.A)
-                Player.XSpeed = 0;
+            if(GameStage == GameStages.Started)
+            Player.Attack(10,Level.Enemies);
         }
-
-
-
-        private void Update(object sender, EventArgs e)
-        {
-            Enemy1.MovmentSimulation();
-            Player.PlayerParameters();
-            Healthbar.UpdateInfo();
-            Invalidate();
-        }
-
         protected override void OnPaint(PaintEventArgs e)
         {
             var g = e.Graphics;
-            g.DrawImage(Ground.Texture, Ground.X, Ground.Y, Ground.XScale, Ground.YScale);
-            g.DrawImage(Player.Texture, Player.X, Player.Y, Player.XScale,Player.YScale);
-            g.DrawImage(Enemy1.Texture, Enemy1.X, Enemy1.Y, Enemy1.XScale, Enemy1.YScale);
-            g.DrawImage(Platform.Texture, Platform.X, Platform.Y, Platform.XScale, Platform.YScale);
-            g.FillRectangle(new SolidBrush(Color.Red), Healthbar.X, Healthbar.Y, Healthbar.Width, Healthbar.Height);
+            if (GameStage == GameStages.NotStarted)
+            {
 
+            }
+            else if (GameStage == GameStages.Started)
+            {
+                if (LevelInitialized)
+                {
+                    Level.DrawLevel(g);
+                    g.DrawImage(Player.Texture, Player.X, Player.Y, Player.XScale, Player.YScale);
+                }
+            }
+            else if (GameStage == GameStages.Ended)
+            {
+
+            }
+            else throw new NotImplementedException();
         }
+        private void Update(object sender, EventArgs e)
+        {
+            if (GameStage == GameStages.NotStarted)
+            {
+                DrawMenu();
+            }
+            else if (GameStage == GameStages.Started)
+            {
+                if (!LevelInitialized)
+                {
+                    Controls.Clear();
+                    DrawLevel(CurrentLevelNum);
+                }
+                foreach (var enemy in Level.Enemies)
+                {
+                    enemy.EnemyInteractions();
+                }
+                Player.PlayerInteractions();
+            }
+            else if (GameStage == GameStages.Ended)
+            {
+
+            }
+            else throw new NotImplementedException();
+            Invalidate();
+        }
+        private void UpdateAnimationFrame(object sender, EventArgs e)
+        {
+            if (GameStage == GameStages.Started && LevelInitialized)
+            {
+                Player.PlayCurrentAnimation();
+                foreach (var enemy in Level.Enemies)
+                    enemy.PlayCurrentAnimation();
+            }
+        }
+
+
 
         private void SetWindowSettings()
         {
             FormBorderStyle = FormBorderStyle.FixedDialog;
             DoubleBuffered = true;
             Point windowCoords = PointToScreen(new Point(Window.Width, Window.Height));
-            this.Size = new Size(windowCoords);
-            this.BackColor = Color.LightGray;
-
+            Size = new Size(windowCoords);
+            this.WindowState = FormWindowState.Maximized; // fullscreen
         }
-        private void SetTimer(int interval)
+        private void SetEvents()
         {
-            Timer = new Timer();
-            Timer.Interval = interval;
+            SetControlEvents();
+            SetTimerEvents();
+        }
+        private void SetControlEvents()
+        {
+            KeyDown += new KeyEventHandler(OnKeyDown);
+            KeyUp += new KeyEventHandler(OnKeyUp);
+            Click += new EventHandler(OnClick);
+        }
+        private void SetTimerEvents()
+        {
+            Timer = new Timer { Interval = 10 };
+            Timer.Tick += new EventHandler(Update);
             Timer.Start();
+
+            AnimationDelayTimer = new Timer { Interval = 100 };
+            AnimationDelayTimer.Tick += new EventHandler(UpdateAnimationFrame);
+            AnimationDelayTimer.Start();
         }
     }
 }
