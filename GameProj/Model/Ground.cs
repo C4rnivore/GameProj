@@ -5,21 +5,22 @@ using System.Text;
 
 namespace GameProj.Model
 {
-    class Ground
+    public class Ground
     {
-        public static int X { get; set; }
-        public static int Y { get; set; }
+        public  int X { get; set; }
+        public  int Y { get; set; }
+        public static Image Texture { get; set; }
         public int XScale { get; set; }
         public int YScale { get; set; }
 
-        public Image Texture { get; set; }
+
 
 
         public Ground(int x, int y)
         {
             X = x;
             Y = y;
-            Texture = new Bitmap("C:\\Users\\Kirill\\Desktop\\Game\\Images\\ground.jpg");
+            Texture = new Bitmap("C:\\Users\\Kirill\\Desktop\\Game\\Images\\groundL.jpg");
             XScale = 2000;
             YScale = 200;
         }

@@ -7,16 +7,16 @@ namespace GameProj.Model
 {
      public class Platform
     {
-        public static int X { get; set; }
-        public static int Y { get; set; }
-        public static int Top { get; set; }
-        public static int Bottom { get; set; }
-        public static int LeftSide { get; set; }
-        public static int RightSide { get; set; }
+        public  int X { get; set; }
+        public  int Y { get; set; }
+        public  int Top { get; set; }
+        public  int Bottom { get; set; }
+        public  int LeftSide { get; set; }
+        public  int RightSide { get; set; }
 
-        public static Image Texture { get; set; }
-        public static int XScale { get; set; }
-        public static int YScale { get; set; }
+        public  Image Texture { get; set; }
+        public  int XScale { get; set; }
+        public  int YScale { get; set; }
 
         public Platform(int x, int y)
         {
